@@ -1,0 +1,42 @@
+This is a first version of my VM start/stop tools
+
+prerequisites:
+have LVM set up
+have vde_switch installed (or uml_switch for UML)
+have KVM|UML|VirtualBox installed
+
+Setup:
+write the name of your Volume Group into etc/vbox/vgname
+  e.g. echo myvg > etc/vbox/vgname
+
+write your subnet prefix into /home/uml1/prefix
+  e.g. echo 192.168.123. > /home/uml1/prefix
+
+edit etc/vbox/settings to list the ID-numbers of your VMs
+ that you want autostarted after a boot
+
+sudo cp -a etc vm /
+sudo insserv vbox
+
+add VM user(s) to your system
+for i in 1 ; do 
+  useradd -m --home /vm/vm$i --groups kvm,vde2-net,uml-net,vboxusers vm$i
+  ln -s /vm/bin/startkvmraw /vm/vm$i/start
+  ln -s start /vm/vm$i/stop
+  vim /vm/vm$i/options # per-VM configuration
+  vim /vm/vm$i/info.txt # describe for what/who the VM is
+  chown -R vm$i. /vm/vm$i
+done
+
+How to create a new VM:
+lvcreate vg0 -n vm23 -L 2G # storage for rootfs
+chown vm23 /dev/vg0/vm23
+dd if=template.img of=/dev/vg0/vm23 bs=64k
+
+
+How to use:
+ see http://www.zq1.de/services/kvm
+
+ as root you can start a VM with
+ startvmsu 23
+

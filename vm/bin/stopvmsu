@@ -1,0 +1,5 @@
+#!/bin/sh
+i=$1
+su -c "/vm/vm$i/stop stop" - vm$i
+echo system_powerdown > `kvmmanage $i`
+

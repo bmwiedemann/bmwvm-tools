@@ -1,0 +1,60 @@
+#!/bin/sh
+if [ -z "$n" ] ; then
+        n=$(whoami|perl -pe s/vm//)
+fi
+if [ "$1" = "stop" ] ; then
+	uml_mconsole /vm/vm$n/.uml/uml$n/mconsole cad
+	#(sleep 30 ; sudo /vm/bin/losetup.pl $n -d )&
+	exit 0
+fi
+p=/vm/
+h=$HOME
+linux=${linux:-/vm/bin/linux}
+prefix=`cat /home/uml1/prefix`
+#image=${image:-$p/root_fs_suse103}
+vgname=`cat /etc/vbox/vgname`
+image=${image:-/dev/mapper/$vgname-vm$n}
+root=/dev/ubda1
+rw=1
+cpumask=ffffffc
+options=${options:-/vm/vm$n/options}
+mem=${mem:-28M}
+con=
+#ssl0=port:${n}223
+extra=
+persistentcow=0
+bg=' > $HOME/log/$n &'
+mkdir -p $HOME/log
+if [ $i ] ; then con="con0=fd:0,fd:1" ; bg="" ; 
+else exec <&-; exec 2>&-;
+fi
+
+if [ -z "$n" ] ; then
+	echo usage: n=1 $0
+	echo "  other options: i=0 options=/home/uml$n/options image= "
+	exit 1
+fi
+
+test -e $options && . $options
+
+swap=swap$n
+cd $h
+if [ $persistentcow = 0 ] ; then
+	rm -f cow$n
+fi
+#rm -f $swap
+#dd if=/dev/zero of=$swap bs=1k count=1 seek=99999 2>/dev/null
+#chmod 600 $swap
+#/sbin/mkswap $swap
+#cd $p
+#eth=$(printf 08:00:27:00:%.2x:%.2x 0 $n)
+eth=$(printf FE:FD:00:00:%.2x:%.2x $(echo $prefix|cut -d. -f3) $n)
+test -n "$rw" || cow=$h/cow$n,
+#sudo /vm/bin/losetup.pl $n
+touch /vm/vm$n/.vmstart
+
+netsock=/var/run/vde.ctl/ctl
+#/var/run/uml-utilities/uml_switch.ctl
+
+eval /usr/bin/taskset $cpumask $linux root=$root eth0=daemon,$eth,unix,$netsock ubd0=$cow$image umlid=$n umid=uml$n mem=$mem $extra  $con con=pts myumlinit=/host/init hostfs=$h/$n $* $bg
+

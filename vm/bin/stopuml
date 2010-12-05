@@ -1,0 +1,7 @@
+#!/bin/sh
+if [ -z "$n" ] ; then
+        n=$(whoami|perl -pe s/vm//)
+fi
+uml_mconsole /vm/vm$n/.uml/uml$n/mconsole cad
+
+(sleep 20 ; sudo /vm/bin/losetup.pl $n -d )&

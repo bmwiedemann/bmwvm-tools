@@ -1,0 +1,12 @@
+#!/usr/bin/perl -w
+# set CPU affinity for all tasks of a process
+use strict;
+my $mask=shift;
+
+foreach my $pid(@ARGV) {
+	chdir "/proc/$pid/task/";
+	my @tasks=<*>;
+	foreach my $t (@tasks) {
+		system("/usr/bin/taskset", "-p", $mask, $t);
+	}
+}

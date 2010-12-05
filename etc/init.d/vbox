@@ -1,0 +1,57 @@
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides:       vbox
+# Required-Start: $network vboxnet vboxdrv
+# Required-Stop:
+# Default-Start:  2 3 4 5
+# Default-Stop:   0 1 6
+# Description:    VirtualBox server autostart
+### END INIT INFO
+
+. /etc/vbox/settings
+
+case $1 in
+	start)
+		# KVM prevents VBox-1.6.6 from working
+		#rmmod kvm-intel
+		modprobe kvm-intel
+		/usr/local/sbin/umliptables
+		#modprobe vboxdrv
+
+		# VirtualDistributedEthernet:
+		killall -0 vde_switch || vde_switch --tap tap0 --daemon -group kvm -mod 660
+		sleep 1
+		#chmod a+rX /var/run/vde.ctl/
+		chgrp kvm /var/run/vde.ctl
+		for i in $(seq 1 29) ; do
+                        chown vm$i /dev/mapper/*-vm$i* 2>/dev/null || true
+                done
+
+		echo "starting vms"
+		for i in $START_VMS ; do
+			echo "starting VM $i";
+			su -c /vm/vm$i/start - vm$i
+			sleep 30
+		done
+	;;
+	stop)
+		echo "stopping vms"
+		for i in $(seq 1 29) ; do
+			su -c "/vm/vm$i/stop stop" - vm$i &
+		done
+		n=20
+		# wait up to $n seconds for VMs to stop cleanly
+		while test $n -gt 0 && killall -0 VBoxSVC kvm qemu-kvm ; do
+			sleep 1
+			n=$(expr $n - 1)
+		done
+	;;
+	status)
+		#ps axu|grep "/usr/lib/virtualbox/*V"
+		ps axu|grep "^vm.*kvm"
+	;;
+	*)
+	echo "Usage: $0 {start|stop|status}"
+	;;
+esac
+

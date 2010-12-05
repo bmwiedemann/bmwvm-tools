@@ -1,0 +1,74 @@
+#!/bin/sh
+iptables=/sbin/iptables
+prefix=`cat /home/uml1/prefix`
+
+IP1=78.46.32.14
+IP3=188.40.172.113
+IP4=188.40.172.114
+
+c=umlredir
+
+$iptables -t nat -N $c 2>/dev/null
+$iptables -t nat -F $c
+$iptables -t nat -D PREROUTING -j $c 2>/dev/null
+$iptables -t nat -A PREROUTING -j $c
+
+# get tor to listen on 443:
+#$iptables -t nat -A $c -d $IP1 -p tcp --dport 443 -j REDIRECT --to-ports 9001
+#$iptables -t nat -A $c -d $IP1 -p tcp --dport 443 -j DNAT --to-destination $IP1:9001
+
+# uml ssh
+for i in $(seq 1 15) ; do
+	$iptables -t nat -A $c -d $IP1 -p tcp --dport $(expr 22000 + $i) -j DNAT --to-destination ${prefix}$(expr $i \* 4 - 2):22
+	$iptables -t nat -A $c -d $IP3 -p tcp --dport $(expr 22000 + $i) -j DNAT --to-destination ${prefix}$(expr $i \* 4 - 2):22
+done
+
+
+# work around IP collision
+#$iptables -t nat -A $c -d $IP4 -p tcp --dport 22000 -j DNAT --to-destination 85.25.133.191:22
+#$iptables -t nat -A $c -d $IP4 -p tcp --dport 22023 -j DNAT --to-destination 85.25.133.191:23
+
+
+# uml rules
+$iptables -t nat -A $c -d $IP1 -p udp --dport 5001:5002 -j DNAT --to-destination ${prefix}2
+$iptables -t nat -A $c -d $IP1 -p udp --dport 27000 -j DNAT --to-destination ${prefix}2:5001
+$iptables -t nat -A $c -d $IP3 -p udp --dport 53 -j DNAT --to-destination ${prefix}6
+$iptables -t nat -A $c -d $IP3 -p tcp --dport 53 -j DNAT --to-destination ${prefix}6
+$iptables -t nat -A $c -d $IP1 -p udp --dport 53 -j DNAT --to-destination ${prefix}6
+$iptables -t nat -A $c -d $IP1 -p tcp --dport 53 -j DNAT --to-destination ${prefix}6
+$iptables -t nat -A $c -d $IP1 -p tcp --dport 81 -j DNAT --to-destination ${prefix}42:11081
+$iptables -t nat -A $c -d $IP1 -p tcp --dport 4001:4999 -j DNAT --to-destination ${prefix}14
+$iptables -t nat -A $c -d $IP1 -p tcp --dport 5001:5899 -j DNAT --to-destination ${prefix}18
+$iptables -t nat -A $c -d $IP1 -p udp --dport 5001:5999 -j DNAT --to-destination ${prefix}18
+$iptables -t nat -A $c -d $IP1 -p tcp --dport 7001:7999 -j DNAT --to-destination ${prefix}26
+$iptables -t nat -A $c -d $IP1 -p udp --dport 7001:7999 -j DNAT --to-destination ${prefix}26
+$iptables -t nat -A $c -d $IP1 -p tcp --dport 8001:8999 -j DNAT --to-destination ${prefix}30
+$iptables -t nat -A $c -d $IP1 -p udp --dport 8001:8999 -j DNAT --to-destination ${prefix}30
+$iptables -t nat -A $c -d $IP1 -p tcp --dport 9001:9999 -j DNAT --to-destination ${prefix}34
+#$iptables -t nat -A $c -d $IP1 -p tcp --dport 10001:10999 -j DNAT --to-destination ${prefix}38
+$iptables -t nat -A $c -d $IP1 -p tcp --dport 11001:11999 -j DNAT --to-destination ${prefix}42
+#$iptables -t nat -A $c -d $IP6 -p tcp --dport 11001:11999 -j DNAT --to-destination ${prefix}42
+$iptables -t nat -A $c -d $IP1 -p tcp --dport 12001:12999 -j DNAT --to-destination ${prefix}46
+$iptables -t nat -A $c -d $IP3 -p tcp --dport 12001:12999 -j DNAT --to-destination ${prefix}46
+$iptables -t nat -A $c -d $IP1 -p udp --dport 12001:12999 -j DNAT --to-destination ${prefix}46
+$iptables -t nat -A $c -d $IP1 -p tcp --dport 14001:14999 -j DNAT --to-destination ${prefix}54
+$iptables -t nat -A $c -d $IP1 -p udp --dport 14001:14999 -j DNAT --to-destination ${prefix}54
+
+#$iptables -t nat -A $c -d $IP4 -p tcp --dport 25 -j REDIRECT --to-ports 26
+#$iptables -t nat -A $c -d $IP6 -j DNAT --to-destination ${prefix}6
+
+
+c=umlout
+$iptables -t nat -N $c 2>/dev/null
+$iptables -t nat -F $c
+$iptables -t nat -D POSTROUTING -j $c 2>/dev/null
+$iptables -t nat -I POSTROUTING -j $c
+
+
+#$iptables -t nat -I $c -o eth0 -s ${prefix}30 -j SNAT --to-source $IP4
+#$iptables -t nat -A $c -o eth0 -s 192.168.0.0/16 -j SNAT --to-source $IP3
+#$iptables -t nat -A $c -o eth0 -s $IP1 -j SNAT --to-source $IP3 # fallback
+
+$iptables -t nat -A $c -o eth0 -s 192.168.0.0/16 -j MASQUERADE
+$iptables -t nat -A $c -o eth0 -s 10.8.0.0/22 -j MASQUERADE
+

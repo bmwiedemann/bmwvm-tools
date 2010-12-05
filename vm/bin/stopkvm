@@ -1,0 +1,7 @@
+#!/bin/sh
+if [ -z "$n" ] ; then
+        n=$(whoami|perl -pe s/vm//)
+fi
+#echo sendkey ctrl-alt-delete | nc -q 1 localhost ${n}224
+echo system_powerdown > `kvmmanage $n`
+

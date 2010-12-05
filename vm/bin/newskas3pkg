@@ -1,0 +1,11 @@
+#!/bin/sh
+mkdir -p /vm/uml/host
+cd /vm/uml/host
+rm -rf linux-source-2.6.18
+tar xjf /usr/src/linux-source-2.6.18.tar.bz2
+cd linux-source-2.6.18
+cp -a /boot/config-2.6.18-686-skas3-v8.2 .config
+bzip2 -cd ../../skas-2.6.18-v8.2.patch.bz2 | patch -p1 -s
+make cloneconfig
+make-kpkg --initrd --rootcmd fakeroot --append-to-version "-686" \
+  --revision bmw8 kernel_image kernel_headers kernel_source
