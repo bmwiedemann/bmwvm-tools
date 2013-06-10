@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 if [ -z "$n" ] ; then
         n=$(whoami|perl -pe s/vm//)
 	n2=`printf "%02i" $n`
@@ -6,6 +6,16 @@ fi
 if [ "$1" = "stop" ] ; then
 	echo system_powerdown > `kvmmanage $n`
 	exit 0
+fi
+if [ "$1" = "suspend" ] ; then
+	echo -e "stop\nmigrate \"exec:gzip -c > /vm/vm$n/STATEFILE.gz\"\nquit" > `kvmmanage $n`
+	exit 0
+fi
+declare -a extraargs
+if [ "$1" = "resume" -o -e /vm/vm$n/STATEFILE.gz ] ; then
+	extraargs+=( "-incoming" )
+	extraargs+=( "exec:gzip -cd /vm/vm$n/STATEFILE.gz" )
+	#kvmresume2="exec:gzip -cd /vm/vm$n/STATEFILE.gz"
 fi
 
 p=/vm/
@@ -70,7 +80,9 @@ touch /vm/vm$n/.vmstart
 
 #eval $linux root=/dev/ubda1 eth0=daemon,$eth,unix,/var/run/vde.ctl/ctl ubd0=$cow$image umlid=$n umid=uml$n mem=$mem $extra  $con con=pts hostfs=$h/$n $* $bg
 
+kvm=/usr/bin/kvm
+[ -x $kvm ] || kvm=/usr/bin/qemu-kvm
 mem=`perl -e '$_=shift;s/m//i; print' $mem`
-exec /usr/bin/nice -n $nice /usr/bin/taskset $cpumask kvm -name vm$n -smp $smp -net vde -net nic,macaddr=$eth$netopt -drive file=$image,if=$rootif,index=0,media=disk,boot=on -m $mem -monitor pty $extra $bg
+exec /usr/bin/nice -n $nice /usr/bin/taskset $cpumask $kvm -name vm$n -smp $smp -net vde -net nic,macaddr=$eth$netopt -drive file=$image,if=$rootif,index=0,media=disk -m $mem -monitor pty $extra "${extraargs[@]}" $bg
 # -serial telnet::${n}223,server,nowait -monitor tcp:127.0.0.1:${n}224,server,nowait
 
