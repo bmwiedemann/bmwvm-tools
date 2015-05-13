@@ -54,7 +54,7 @@ fi
 test -e $options && . $options
 
 if [ $vnc ] ; then
-	bg=" -vnc $vncopts $bg"
+	bg=" -vga cirrus -vnc $vncopts $bg"
 	#-k de
 else
 	bg=" -nographic $bg"
@@ -84,6 +84,6 @@ touch /vm/vm$n/.vmstart
 kvm=/usr/bin/kvm
 [ -x $kvm ] || kvm=/usr/bin/qemu-kvm
 mem=`perl -e '$_=shift;s/m//i; print' $mem`
-exec /usr/bin/nice -n $nice /usr/bin/taskset $cpumask $kvm -name vm$n -smp $smp -net vde -net nic,macaddr=$eth$netopt -drive file=$image,if=$rootif,index=0,media=disk -m $mem -monitor pty $extra "${extraargs[@]}" $bg
+exec /usr/bin/nice -n $nice /usr/bin/taskset $cpumask $kvm -nodefaults -name vm$n -smp $smp -net vde -net nic,macaddr=$eth$netopt -drive file=$image,if=$rootif,index=0,media=disk -m $mem -monitor pty $extra "${extraargs[@]}" $bg
 # -serial telnet::${n}223,server,nowait -monitor tcp:127.0.0.1:${n}224,server,nowait
 
