@@ -29,7 +29,9 @@ cpumask=fffffffe
 #image=${image:-$p/root_fs_suse103}
 vgname=`cat /etc/vbox/vgname`
 smp=4
-rootif=ide
+rootif=virtio
+netopt=,model=virtio
+vnc=1
 vncopts="$vpnip:$n"
 image=${image:-/dev/mapper/$vgname-vm$n}
 if [ ! -e $image ] ; then
@@ -38,7 +40,7 @@ if [ ! -e $image ] ; then
 fi
 rw=1
 options=${options:-/vm/vm$n/options}
-mem=${mem:-64M}
+mem=${mem:-640M}
 con=
 extra=
 persistentcow=0
