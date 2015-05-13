@@ -16,6 +16,7 @@ if [ "$1" = "resume" -o -e /vm/vm$n/STATEFILE.gz ] ; then
 	extraargs+=( "-incoming" )
 	extraargs+=( "exec:gzip -cd /vm/vm$n/STATEFILE.gz" )
 	#kvmresume2="exec:gzip -cd /vm/vm$n/STATEFILE.gz"
+	(sleep 24h && rm -f /vm/vm$n/STATEFILE.gz)&
 fi
 
 p=/vm/

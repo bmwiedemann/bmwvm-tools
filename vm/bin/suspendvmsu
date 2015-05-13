@@ -1,0 +1,4 @@
+#!/bin/sh
+i=$1
+su -c "/vm/vm$i/start suspend" - vm$i
+
