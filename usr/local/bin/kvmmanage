@@ -1,0 +1,14 @@
+#!/usr/bin/perl -w
+use strict;
+
+my $n=shift;
+my $uidbase=999;
+
+for my $pts (</dev/pts/*>) {
+        my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,
+        $atime,$mtime,$ctime,$blksize,$blocks)= stat($pts);
+        if($uid==$uidbase+$n) {
+                print $pts,"\n";
+                exit 0;
+        }
+}
