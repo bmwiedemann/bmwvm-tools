@@ -77,6 +77,7 @@ fi
 #/sbin/mkswap $swap
 #cd $p
 eth=$(printf FE:FD:00:00:%.2x:%.2x $(echo $prefix|cut -d. -f3) $n)
+uuid=03dd8ce0-8eb4-4f8a-b488-23b89999$(printf %02x%02x $(echo $prefix|cut -d. -f3) $n)
 test -n "$rw" || cow=$h/cow$n,
 #sudo /vm/bin/losetup.pl $n
 touch /vm/vm$n/.vmstart
@@ -86,6 +87,6 @@ touch /vm/vm$n/.vmstart
 kvm=/usr/bin/kvm
 [ -x $kvm ] || kvm=/usr/bin/qemu-kvm
 mem=`perl -e '$_=shift;s/m//i; print' $mem`
-exec /usr/bin/nice -n $nice /usr/bin/taskset $cpumask $kvm -nodefaults -name vm$n -smp $smp -net vde -net nic,macaddr=$eth$netopt -drive file=$image,if=$rootif,index=0,media=disk -m $mem -monitor pty $extra "${extraargs[@]}" $bg
+exec /usr/bin/nice -n $nice /usr/bin/taskset $cpumask $kvm -nodefaults -name vm$n -smp $smp -net vde -net nic,macaddr=$eth$netopt -uuid $uuid -drive file=$image,if=$rootif,index=0,media=disk,format=raw -m $mem -monitor pty $extra "${extraargs[@]}" $bg
 # -serial telnet::${n}223,server,nowait -monitor tcp:127.0.0.1:${n}224,server,nowait
 
