@@ -32,6 +32,8 @@ smp=4
 rootif=virtio
 netopt=,model=virtio
 vnc=1
+#cpu=Opteron_G5,-xop,-fma4,-tbm
+cpu=EPYC
 vncopts="$vpnip:$n"
 image=${image:-/dev/mapper/$vgname-vm$n}
 if [ ! -e $image ] ; then
@@ -87,6 +89,6 @@ touch /vm/vm$n/.vmstart
 kvm=/usr/bin/kvm
 [ -x $kvm ] || kvm=/usr/bin/qemu-kvm
 mem=`perl -e '$_=shift;s/m//i; print' $mem`
-exec /usr/bin/nice -n $nice /usr/bin/taskset $cpumask $kvm -nodefaults -name vm$n -smp $smp -net vde -net nic,macaddr=$eth$netopt -uuid $uuid -drive file=$image,if=$rootif,index=0,media=disk,format=raw -m $mem -monitor pty $extra "${extraargs[@]}" $bg
+exec /usr/bin/nice -n $nice /usr/bin/taskset $cpumask $kvm -nodefaults -name vm$n -cpu $cpu -smp $smp -net vde -net nic,macaddr=$eth$netopt -uuid $uuid -drive file=$image,if=$rootif,index=0,media=disk,format=raw -m $mem -monitor pty $extra "${extraargs[@]}" $bg
 # -serial telnet::${n}223,server,nowait -monitor tcp:127.0.0.1:${n}224,server,nowait
 
