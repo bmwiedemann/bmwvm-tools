@@ -57,7 +57,7 @@ fi
 
 test -e $options && . $options
 
-if [ $vnc ] ; then
+if [ "$vnc" = 1 ] ; then
 	bg=" -vga cirrus -vnc $vncopts $bg"
 	#-k de
 else
