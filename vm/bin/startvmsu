@@ -1,4 +1,5 @@
 #!/bin/sh
 i=$1
+chown vm$i /dev/vg0/vm$i*
 su -c "/vm/vm$i/start start" - vm$i
 
